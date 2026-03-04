@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinMatch · Product Survey</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: #0D0F14; }
+  ::-webkit-scrollbar-thumb { background: #2D3748; border-radius: 2px; }
+
+  body {
+    font-family: 'Geist Mono', monospace;
+    background: linear-gradient(135deg, #0D0F14 0%, #111318 50%, #0D0F14 100%);
+    min-height: 100vh;
+    color: #E2E8F0;
+  }
+
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* START SCREEN */
+  #start-screen {
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .start-inner { max-width: 480px; width: 100%; text-align: center; }
+  .logo {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    border-radius: 16px; margin: 0 auto 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; color: white; font-weight: 500;
+  }
+  .start-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 36px; color: #F1F5F9; margin-bottom: 10px;
+    font-weight: 400; line-height: 1.2;
+  }
+  .start-sub { font-size: 12px; color: #6B7280; line-height: 1.7; margin-bottom: 32px; }
+  .name-input {
+    width: 100%; padding: 12px 16px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 10px; color: #E2E8F0;
+    font-family: 'Geist Mono', monospace; font-size: 13px;
+    margin-bottom: 12px; transition: border-color 0.2s;
+  }
+  .name-input:focus { outline: none; border-color: rgba(59,130,246,0.5); }
+  .start-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, #3B82F6, #6366F1);
+    border: none; border-radius: 10px; color: white;
+    font-family: 'Geist Mono', monospace; font-size: 12px;
+    letter-spacing: 0.1em; cursor: pointer;
+    transition: all 0.2s; font-weight: 500;
+  }
+  .start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(59,130,246,0.3); }
+  .start-btn:disabled { background: rgba(255,255,255,0.05); color: #4B5563; cursor: default; transform: none; box-shadow: none; }
+  .start-hint { margin-top: 14px; font-size: 11px; color: #374151; }
+
+  /* PROGRESS BAR */
+  .progress-bar { height: 3px; background: rgba(255,255,255,0.05); position: relative; flex-shrink: 0; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #3B82F6, #8B5CF6); transition: width 0.4s ease; }
+
+  /* TOP BAR */
+  .topbar {
+    padding: 16px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.05); flex-shrink: 0;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 10px; }
+  .logo-sm {
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    border-radius: 7px; display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: white; font-weight: 500;
+  }
+  .topbar-label { font-size: 11px; color: #4B5563; letter-spacing: 0.08em; }
+  .topbar-counter { font-size: 11px; color: #4B5563; }
+
+  /* QUESTION AREA */
+  .question-area {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    padding: 24px; overflow-y: auto;
+  }
+  .question-inner { max-width: 600px; width: 100%; }
+  .cat-badge {
+    display: inline-flex; align-items: center;
+    padding: 4px 12px; border-radius: 5px;
+    font-size: 9px; letter-spacing: 0.14em; font-weight: 500;
+    margin-bottom: 20px;
+  }
+  .cat-line {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+  }
+  .cat-line-rule { flex: 1; height: 1px; }
+  .q-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 26px; font-weight: 400; color: #F1F5F9;
+    line-height: 1.35; margin-bottom: 10px;
+  }
+  .q-why { font-size: 11px; color: #4B5563; line-height: 1.6; margin-bottom: 28px; }
+  .q-why span { color: #6B7280; }
+  .q-type-hint { font-size: 9px; color: #374151; letter-spacing: 0.1em; margin-bottom: 14px; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .opt-card {
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    display: flex; align-items: center; gap: 12px;
+    cursor: pointer; transition: all 0.15s ease;
+  }
+  .opt-card:hover { transform: translateX(4px); }
+  .opt-check {
+    width: 20px; height: 20px; flex-shrink: 0;
+    border: 2px solid rgba(255,255,255,0.15);
+    background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s; font-size: 11px; color: white;
+  }
+  .opt-label { font-size: 13px; color: #9CA3AF; line-height: 1.4; }
+
+  /* NAV */
+  .nav-bar {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-shrink: 0;
+  }
+  .nav-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #6B7280; padding: 10px 20px; border-radius: 8px;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    cursor: pointer; letter-spacing: 0.08em; transition: opacity 0.15s;
+  }
+  .nav-btn:hover { opacity: 0.8; }
+  .nav-btn:disabled { color: #2D3748; border-color: rgba(255,255,255,0.04); cursor: default; }
+  .nav-next {
+    border: none; color: white;
+    padding: 10px 24px; border-radius: 8px;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    cursor: pointer; letter-spacing: 0.08em; transition: all 0.2s; font-weight: 500;
+  }
+  .nav-next:disabled { background: rgba(255,255,255,0.05) !important; color: #374151; cursor: default; }
+  .dots { display: flex; gap: 5px; align-items: center; }
+  .dot {
+    height: 6px; border-radius: 3px;
+    transition: all 0.2s; cursor: pointer;
+    background: rgba(255,255,255,0.1);
+  }
+
+  /* RESULTS */
+  #results-screen { padding: 0; overflow-y: auto; }
+  .results-header { text-align: center; padding: 40px 24px 32px; }
+  .results-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 32px; color: #F1F5F9; font-weight: 400; margin-bottom: 8px;
+  }
+  .results-sub { font-size: 11px; color: #6B7280; letter-spacing: 0.08em; }
+  .share-box {
+    max-width: 600px; margin: 0 auto 32px;
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.2);
+    border-radius: 12px; padding: 20px 24px;
+  }
+  .share-label { font-size: 10px; color: #60A5FA; letter-spacing: 0.1em; margin-bottom: 10px; }
+  .share-desc { font-size: 12px; color: #94A3B8; line-height: 1.6; margin-bottom: 14px; }
+  .share-row { display: flex; gap: 8px; }
+  .share-url {
+    flex: 1; padding: 10px 12px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 7px; color: #6B7280;
+    font-family: 'Geist Mono', monospace; font-size: 10px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .copy-btn {
+    padding: 10px 16px;
+    background: rgba(59,130,246,0.2);
+    border: 1px solid rgba(59,130,246,0.4);
+    color: #60A5FA; border-radius: 7px;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    cursor: pointer; white-space: nowrap; transition: all 0.15s;
+  }
+  .copy-btn:hover { background: rgba(59,130,246,0.3); }
+  .answers-list { max-width: 600px; margin: 0 auto; padding: 0 24px 40px; }
+  .answer-card {
+    margin-bottom: 12px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 12px; overflow: hidden;
+  }
+  .answer-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .answer-body { padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .answer-opt {
+    padding: 5px 12px; border-radius: 6px; font-size: 11px;
+  }
+  .restart-btn {
+    display: block; margin: 0 auto 40px;
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #6B7280; padding: 10px 24px; border-radius: 8px;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    cursor: pointer; letter-spacing: 0.08em;
+  }
+
+  /* COMPARE */
+  #compare-screen { overflow-y: auto; }
+  .compare-header { text-align: center; padding: 32px 24px 24px; }
+  .compare-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px; color: #F1F5F9; font-weight: 400; margin-bottom: 8px;
+  }
+  .compare-names { display: flex; justify-content: center; gap: 16px; margin-bottom: 8px; }
+  .name-tag { padding: 4px 14px; border-radius: 20px; font-size: 11px; }
+  .compare-sub { font-size: 11px; color: #6B7280; }
+  .compare-list { max-width: 720px; margin: 0 auto; padding: 0 24px 40px; }
+  .compare-card {
+    margin-bottom: 16px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 14px; overflow: hidden;
+  }
+  .compare-card.match { border: 1px solid rgba(16,185,129,0.2); }
+  .compare-card.diff { border: 1px solid rgba(239,68,68,0.25); }
+  .compare-card-header {
+    padding: 12px 16px;
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .match-badge {
+    margin-left: auto; font-size: 9px; padding: 3px 10px;
+    border-radius: 20px; letter-spacing: 0.08em;
+  }
+  .compare-cols {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 0; border-top: 1px solid rgba(255,255,255,0.05);
+  }
+  .compare-col { padding: 12px 16px; }
+  .compare-col:first-child { border-right: 1px solid rgba(255,255,255,0.05); }
+  .col-name { font-size: 9px; letter-spacing: 0.1em; margin-bottom: 8px; }
+  .compare-opts { display: flex; flex-direction: column; gap: 5px; }
+  .compare-opt { padding: 5px 10px; border-radius: 5px; font-size: 11px; }
+  .stats-bar {
+    max-width: 720px; margin: 0 auto 24px; padding: 0 24px;
+    display: flex; gap: 16px;
+  }
+  .stat-box {
+    flex: 1; padding: 14px 16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px; text-align: center;
+  }
+  .stat-val { font-family: 'Instrument Serif', serif; font-size: 28px; color: #F1F5F9; }
+  .stat-lbl { font-size: 9px; color: #4B5563; letter-spacing: 0.1em; margin-top: 4px; }
+
+  .fill-btn-row { display: flex; justify-content: center; padding: 0 24px 32px; }
+  .fill-btn {
+    padding: 12px 28px;
+    background: linear-gradient(135deg, #3B82F6, #6366F1);
+    border: none; border-radius: 10px; color: white;
+    font-family: 'Geist Mono', monospace; font-size: 11px;
+    letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s;
+  }
+  .fill-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(59,130,246,0.3); }
+</style>
+</head>
+<body>
+
+<!-- START -->
+<div id="start-screen" class="screen active">
+  <div class="start-inner">
+    <div class="logo">FM</div>
+    <h1 class="start-title">FinMatch<br><em style="color:#94A3B8">Product Survey</em></h1>
+    <p class="start-sub">
+      10 pytań o funkcjonalności platformy.<br>
+      Wypełnij, skopiuj link z wynikami, wyślij wspólnikowi.<br>
+      Porównajcie odpowiedzi — rozbieżności = priorytety.
+    </p>
+    <input class="name-input" id="name-input" type="text" placeholder="Twoje imię (np. Miro)" />
+    <button class="start-btn" id="start-btn" disabled onclick="startSurvey()">ROZPOCZNIJ ANKIETĘ →</button>
+    <p class="start-hint">~5 minut · 10 pytań · bez rejestracji</p>
+  </div>
+</div>
+
+<!-- SURVEY -->
+<div id="survey-screen" class="screen">
+  <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo-sm">FM</div>
+      <span class="topbar-label" id="topbar-label">PRODUCT SURVEY</span>
+    </div>
+    <span class="topbar-counter" id="topbar-counter">1 / 10</span>
+  </div>
+  <div class="question-area">
+    <div class="question-inner" id="question-inner"></div>
+  </div>
+  <div class="nav-bar">
+    <button class="nav-btn" id="prev-btn" onclick="prevQ()" disabled>← WSTECZ</button>
+    <div class="dots" id="dots"></div>
+    <button class="nav-next" id="next-btn" onclick="nextQ()" disabled>DALEJ →</button>
+  </div>
+</div>
+
+<!-- RESULTS (MY ANSWERS) -->
+<div id="results-screen" class="screen">
+  <div class="results-header">
+    <div style="font-size:40px;margin-bottom:12px">✓</div>
+    <h1 class="results-title" id="results-title">Twoje odpowiedzi</h1>
+    <p class="results-sub">WYŚLIJ LINK WSPÓLNIKOWI DO PORÓWNANIA</p>
+  </div>
+  <div class="share-box" style="max-width:600px;margin:0 auto 32px;padding:20px 24px">
+    <div class="share-label">🔗 LINK Z TWOIMI WYNIKAMI</div>
+    <div class="share-desc">Wspólnik otwiera ten link → wypełnia swoją wersję → oboje widzicie odpowiedzi obok siebie.</div>
+    <div class="share-row">
+      <div class="share-url" id="share-url-display">Generowanie...</div>
+      <button class="copy-btn" id="copy-btn" onclick="copyLink()">KOPIUJ LINK</button>
+    </div>
+  </div>
+  <div class="answers-list" id="answers-list"></div>
+  <button class="restart-btn" onclick="restart()">WYPEŁNIJ PONOWNIE</button>
+</div>
+
+<!-- COMPARE -->
+<div id="compare-screen" class="screen">
+  <div class="compare-header">
+    <h1 class="compare-title">Porównanie odpowiedzi</h1>
+    <div class="compare-names">
+      <span class="name-tag" id="name-a-tag" style="background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.3)"></span>
+      <span style="color:#4B5563;font-size:12px;display:flex;align-items:center">vs</span>
+      <span class="name-tag" id="name-b-tag" style="background:rgba(139,92,246,0.15);color:#A78BFA;border:1px solid rgba(139,92,246,0.3)"></span>
+    </div>
+    <p class="compare-sub" id="compare-sub"></p>
+  </div>
+  <div class="stats-bar" id="stats-bar"></div>
+  <div class="compare-list" id="compare-list"></div>
+  <div class="fill-btn-row">
+    <button class="fill-btn" onclick="restartAsPartner()">WYPEŁNIJ JAKO WSPÓLNIK</button>
+  </div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    id:1, category:"LEAD SOURCING", color:"#3B82F6",
+    question:"Skąd powinien pochodzić główny strumień nowych leadów w FinMatch?",
+    why:"Decyduje o tym, co budujemy jako pierwsze — scraper KRS czy formularz dla klientów.",
+    type:"single",
+    options:[
+      {v:"a", l:"Automatyczny scraping KRS / MSiG / sygnały publiczne"},
+      {v:"b", l:"Klienci sami się rejestrują i wypełniają profil"},
+      {v:"c", l:"My ręcznie dodajemy firmy po rozmowie"},
+      {v:"d", l:"Mix — scraping + rejestracja klientów"},
+    ]
+  },
+  {
+    id:2, category:"PROFIL FIRMY", color:"#8B5CF6",
+    question:"Jakie dane o firmie muszą być w systemie, żeby zacząć proces?",
+    why:"Definiuje minimalny onboarding — czy wystarczy NIP, czy potrzebujemy pełnego teasera.",
+    type:"multi",
+    options:[
+      {v:"a", l:"NIP + dane z KRS (automatycznie)"},
+      {v:"b", l:"Sprawozdania finansowe (ostatnie 2–3 lata)"},
+      {v:"c", l:"Opis biznesu / teaser inwestycyjny"},
+      {v:"d", l:"Oczekiwana kwota i cel finansowania"},
+      {v:"e", l:"Zgoda na przetwarzanie danych / NDA"},
+    ]
+  },
+  {
+    id:3, category:"MATCHING", color:"#EC4899",
+    question:"Jak powinien działać matching firma ↔ fundusz?",
+    why:"Algorytm vs. ręczna selekcja — różnica w nakładzie pracy i trafności.",
+    type:"single",
+    options:[
+      {v:"a", l:"AI automatycznie proponuje listę funduszy dla każdej firmy"},
+      {v:"b", l:"My ręcznie przypisujemy fundusze do dealu"},
+      {v:"c", l:"System filtruje wg kryteriów, my wybieramy z listy"},
+      {v:"d", l:"Hybrydowo — AI propozycja + nasza akceptacja"},
+    ]
+  },
+  {
+    id:4, category:"BAZA FUNDUSZY", color:"#F59E0B",
+    question:"Kto utrzymuje i aktualizuje bazę funduszy / inwestorów?",
+    why:"Baza to serce matchingu — musi być świeża i dokładna.",
+    type:"single",
+    options:[
+      {v:"a", l:"My sami — ręcznie dodajemy i aktualizujemy"},
+      {v:"b", l:"Automatycznie z zewnętrznych źródeł (Crunchbase, KRS)"},
+      {v:"c", l:"Fundusze same zakładają profile (model marketplace)"},
+      {v:"d", l:"Mix — baza startowa ręcznie, potem auto-aktualizacja"},
+    ]
+  },
+  {
+    id:5, category:"PIPELINE / CRM", color:"#10B981",
+    question:"Jakiego widoku pipeline'u będziemy używać na co dzień?",
+    why:"Wpływa na UI — inaczej buduje się tabelę, inaczej kanbana.",
+    type:"single",
+    options:[
+      {v:"a", l:"Kanban (kolumny = etapy procesu)"},
+      {v:"b", l:"Lista / tabela z filtrowaniem"},
+      {v:"c", l:"Oba — zależnie od preferencji użytkownika"},
+      {v:"d", l:"Widok kalendarza (zadania i follow-upy po dacie)"},
+    ]
+  },
+  {
+    id:6, category:"KOMUNIKACJA", color:"#06B6D4",
+    question:"Jak FinMatch powinien wspierać komunikację z klientem?",
+    why:"Określa czy budujemy moduł komunikacji czy integrujemy zewnętrzne narzędzia.",
+    type:"multi",
+    options:[
+      {v:"a", l:"Wbudowany chat / notatki wewnętrzne w karcie dealu"},
+      {v:"b", l:"Automatyczne emaile (potwierdzenia, przypomnienia)"},
+      {v:"c", l:"Integracja z Gmail / Outlook (historia maili w CRM)"},
+      {v:"d", l:"Nie potrzebujemy — komunikujemy się poza systemem"},
+    ]
+  },
+  {
+    id:7, category:"DOKUMENTY", color:"#F97316",
+    question:"Jak chcemy zarządzać dokumentami w procesie?",
+    why:"Decyduje czy potrzebujemy storage plików czy tylko checklisty.",
+    type:"single",
+    options:[
+      {v:"a", l:"Upload plików bezpośrednio do systemu (storage w chmurze)"},
+      {v:"b", l:"Linki do Google Drive / Dropbox przypisane do dealu"},
+      {v:"c", l:"Tylko checklist — czy dokument jest / nie ma"},
+      {v:"d", l:"Generowanie dokumentów z szablonów (mandat auto-wypełniany)"},
+    ]
+  },
+  {
+    id:8, category:"AUTOMATYZACJA", color:"#EF4444",
+    question:"Które zadania chcemy zautomatyzować w pierwszej kolejności?",
+    why:"Każda automatyzacja to koszt developmentu — priorytety są kluczowe.",
+    type:"multi",
+    options:[
+      {v:"a", l:"Zaciąganie danych firmy z KRS po wpisaniu NIP"},
+      {v:"b", l:"Przypomnienia o follow-upach (brak aktywności > X dni)"},
+      {v:"c", l:"Generowanie teasera / one-pagera firmy przez AI"},
+      {v:"d", l:"Automatyczny cold email do firmy na podstawie sygnału KRS"},
+      {v:"e", l:"Raport tygodniowy pipeline'u dla wspólników"},
+    ]
+  },
+  {
+    id:9, category:"RAPORTY", color:"#84CC16",
+    question:"Jakich raportów potrzebujemy wewnętrznie?",
+    why:"Bez raportów nie wiemy co działa w naszym procesie.",
+    type:"multi",
+    options:[
+      {v:"a", l:"Pipeline value (suma potencjalnych prowizji)"},
+      {v:"b", l:"Aktywność per wspólnik (kontakty, deale)"},
+      {v:"c", l:"Konwersja etapów (lead → mandat → close)"},
+      {v:"d", l:"Czas do zamknięcia (ile dni trwa średni deal)"},
+      {v:"e", l:"Skuteczność funduszy (które biorą nasze deale)"},
+    ]
+  },
+  {
+    id:10, category:"PRIORYTETY MVP", color:"#A78BFA",
+    question:"Co musi działać w MVP, żebyśmy przestali używać Excela?",
+    why:"To definicja 'done' dla fazy 1 — bez tego nie wyjdziemy z etapu prototypu.",
+    type:"multi",
+    options:[
+      {v:"a", l:"Dodawanie i edycja dealów z kartą firmy"},
+      {v:"b", l:"Statusy / etapy pipeline'u"},
+      {v:"c", l:"Historia kontaktów z notatkami"},
+      {v:"d", l:"Przypisanie dealu do wspólnika"},
+      {v:"e", l:"Podstawowe filtry i wyszukiwarka"},
+      {v:"f", l:"Dostęp dla 2–3 osób jednocześnie (multi-user)"},
+    ]
+  },
+];
+
+let currentQ = 0;
+let answers = {};
+let userName = "";
+let partnerData = null;
+
+// --- URL PARAM PARSING ---
+function getUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const d = params.get('d');
+  if (!d) return null;
+  try {
+    return JSON.parse(atob(d));
+  } catch(e) { return null; }
+}
+
+function buildShareUrl(name, ans) {
+  const data = btoa(JSON.stringify({ name, answers: ans }));
+  const base = window.location.href.split('?')[0];
+  return base + '?d=' + data;
+}
+
+// --- INIT ---
+window.onload = function() {
+  const urlData = getUrlParams();
+  if (urlData) {
+    partnerData = urlData;
+    showScreen('start-screen');
+    document.querySelector('.start-sub').innerHTML =
+      `<strong style="color:#A78BFA">${escHtml(urlData.name)}</strong> wypełnił(a) ankietę.<br>
+       Wypełnij swoją wersję — porównamy odpowiedzi.`;
+  }
+
+  document.getElementById('name-input').addEventListener('input', function() {
+    document.getElementById('start-btn').disabled = !this.value.trim();
+  });
+  document.getElementById('name-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && this.value.trim()) startSurvey();
+  });
+};
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startSurvey() {
+  userName = document.getElementById('name-input').value.trim();
+  if (!userName) return;
+  currentQ = 0;
+  answers = {};
+  showScreen('survey-screen');
+  renderQuestion();
+}
+
+// --- RENDER QUESTION ---
+function renderQuestion() {
+  const q = QUESTIONS[currentQ];
+  const col = q.color;
+
+  document.getElementById('topbar-label').textContent = `PRODUCT SURVEY · ${userName.toUpperCase()}`;
+  document.getElementById('topbar-counter').textContent = `${currentQ + 1} / ${QUESTIONS.length}`;
+
+  const filled = Object.keys(answers).length;
+  document.getElementById('progress-fill').style.width = (filled / QUESTIONS.length * 100) + '%';
+
+  // dots
+  const dots = document.getElementById('dots');
+  dots.innerHTML = '';
+  QUESTIONS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot';
+    d.style.width = i === currentQ ? '20px' : '6px';
+    d.style.background = i === currentQ ? col : (answers[QUESTIONS[i].id] ? col + '60' : 'rgba(255,255,255,0.1)');
+    d.onclick = () => { currentQ = i; renderQuestion(); };
+    dots.appendChild(d);
+  });
+
+  // question
+  const inner = document.getElementById('question-inner');
+  const sel = answers[q.id] || [];
+
+  let optsHtml = q.options.map(opt => {
+    const s = sel.includes(opt.v);
+    const radius = q.type === 'multi' ? '5px' : '50%';
+    return `
+      <div class="opt-card" onclick="toggleOpt(${q.id},'${opt.v}','${q.type}')"
+        style="background:${s ? col+'12' : 'rgba(255,255,255,0.03)'};border:1px solid ${s ? col+'50' : 'rgba(255,255,255,0.08)'}">
+        <div class="opt-check" style="border-color:${s ? col : 'rgba(255,255,255,0.15)'};background:${s ? col : 'transparent'};border-radius:${radius}">
+          ${s ? '✓' : ''}
+        </div>
+        <span class="opt-label" style="color:${s ? '#F1F5F9' : '#9CA3AF'}">${escHtml(opt.l)}</span>
+      </div>`;
+  }).join('');
+
+  inner.innerHTML = `
+    <div class="cat-line">
+      <span class="cat-badge" style="background:${col}18;color:${col};border:1px solid ${col}30">${q.category}</span>
+      <div class="cat-line-rule" style="background:linear-gradient(90deg,${col}30,transparent)"></div>
+    </div>
+    <h2 class="q-title">${escHtml(q.question)}</h2>
+    <p class="q-why"><span>Dlaczego ważne: </span>${escHtml(q.why)}</p>
+    <p class="q-type-hint">${q.type === 'multi' ? 'MOŻESZ WYBRAĆ KILKA OPCJI' : 'WYBIERZ JEDNĄ OPCJĘ'}</p>
+    <div class="options">${optsHtml}</div>
+  `;
+
+  // nav buttons
+  document.getElementById('prev-btn').disabled = currentQ === 0;
+  const nextBtn = document.getElementById('next-btn');
+  const hasAnswer = (answers[q.id] || []).length > 0;
+  nextBtn.disabled = !hasAnswer;
+  nextBtn.style.background = hasAnswer ? `linear-gradient(135deg, ${col}, ${col}99)` : '';
+  nextBtn.textContent = currentQ === QUESTIONS.length - 1 ? 'ZAKOŃCZ ✓' : 'DALEJ →';
+}
+
+function toggleOpt(qId, val, type) {
+  if (type === 'single') {
+    answers[qId] = [val];
+  } else {
+    const curr = answers[qId] || [];
+    answers[qId] = curr.includes(val) ? curr.filter(v => v !== val) : [...curr, val];
+  }
+  renderQuestion();
+}
+
+function prevQ() { if (currentQ > 0) { currentQ--; renderQuestion(); } }
+function nextQ() {
+  if ((answers[QUESTIONS[currentQ].id] || []).length === 0) return;
+  if (currentQ < QUESTIONS.length - 1) { currentQ++; renderQuestion(); }
+  else showResults();
+}
+
+// --- RESULTS ---
+function showResults() {
+  showScreen('results-screen');
+
+  document.getElementById('results-title').textContent = `Odpowiedzi — ${userName}`;
+
+  const shareUrl = buildShareUrl(userName, answers);
+  document.getElementById('share-url-display').textContent = shareUrl;
+  document.getElementById('share-url-display').dataset.url = shareUrl;
+
+  // render answers
+  const list = document.getElementById('answers-list');
+  list.innerHTML = QUESTIONS.map((q, i) => {
+    const sel = answers[q.id] || [];
+    const optsHtml = q.options.map(opt => {
+      const s = sel.includes(opt.v);
+      return `<span class="answer-opt" style="background:${s ? q.color+'18' : 'transparent'};color:${s ? q.color : '#374151'};border:1px solid ${s ? q.color+'40' : 'rgba(255,255,255,0.06)'}">${s ? '✓ ' : ''}${escHtml(opt.l)}</span>`;
+    }).join('');
+    return `
+      <div class="answer-card">
+        <div class="answer-header">
+          <span style="background:${q.color}18;color:${q.color};border:1px solid ${q.color}30;padding:2px 8px;border-radius:4px;font-size:9px;letter-spacing:0.1em">${q.category}</span>
+          <span style="font-family:'Instrument Serif',serif;font-size:13px;color:#E2E8F0">${i+1}. ${escHtml(q.question)}</span>
+        </div>
+        <div class="answer-body">${optsHtml}</div>
+      </div>`;
+  }).join('');
+
+  // if partner data exists — go straight to compare
+  if (partnerData) showCompare();
+}
+
+function copyLink() {
+  const url = document.getElementById('share-url-display').dataset.url;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'SKOPIOWANO ✓';
+    btn.style.background = 'rgba(16,185,129,0.2)';
+    btn.style.borderColor = 'rgba(16,185,129,0.4)';
+    btn.style.color = '#10B981';
+    setTimeout(() => {
+      btn.textContent = 'KOPIUJ LINK';
+      btn.style.background = '';
+      btn.style.borderColor = '';
+      btn.style.color = '';
+    }, 2000);
+  });
+}
+
+// --- COMPARE ---
+function showCompare() {
+  if (!partnerData) return;
+
+  // figure out who is A (from URL) and B (current)
+  const nameA = partnerData.name;
+  const nameB = userName;
+  const answersA = partnerData.answers;
+  const answersB = answers;
+
+  showScreen('compare-screen');
+
+  document.getElementById('name-a-tag').textContent = nameA;
+  document.getElementById('name-b-tag').textContent = nameB;
+
+  // calc matches
+  let matches = 0;
+  QUESTIONS.forEach(q => {
+    const a = (answersA[q.id] || []).sort().join(',');
+    const b = (answersB[q.id] || []).sort().join(',');
+    if (a === b) matches++;
+  });
+  const diffs = QUESTIONS.length - matches;
+
+  document.getElementById('compare-sub').textContent =
+    `${matches} zgodnych odpowiedzi · ${diffs} rozbieżności do omówienia`;
+
+  // stats
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat-box">
+      <div class="stat-val" style="color:#10B981">${matches}</div>
+      <div class="stat-lbl">ZGODNYCH</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val" style="color:#EF4444">${diffs}</div>
+      <div class="stat-lbl">ROZBIEŻNOŚCI</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-val">${Math.round(matches/QUESTIONS.length*100)}%</div>
+      <div class="stat-lbl">ZGODNOŚĆ</div>
+    </div>
+  `;
+
+  // sort: diffs first
+  const sorted = [...QUESTIONS].sort((a, b) => {
+    const aMatch = (answersA[a.id]||[]).sort().join(',') === (answersB[a.id]||[]).sort().join(',');
+    const bMatch = (answersA[b.id]||[]).sort().join(',') === (answersB[b.id]||[]).sort().join(',');
+    return aMatch - bMatch;
+  });
+
+  const list = document.getElementById('compare-list');
+  list.innerHTML = sorted.map((q, i) => {
+    const selA = answersA[q.id] || [];
+    const selB = answersB[q.id] || [];
+    const isMatch = selA.sort().join(',') === selB.sort().join(',');
+
+    const renderOpts = (sel, colUser) => q.options.map(opt => {
+      const s = sel.includes(opt.v);
+      return `<div class="compare-opt" style="background:${s ? colUser+'15' : 'transparent'};color:${s ? colUser : '#374151'};border:1px solid ${s ? colUser+'40' : 'rgba(255,255,255,0.05)'}">
+        ${s ? '✓ ' : ''}${escHtml(opt.l)}</div>`;
+    }).join('');
+
+    return `
+      <div class="compare-card ${isMatch ? 'match' : 'diff'}">
+        <div class="compare-card-header">
+          <span style="background:${q.color}18;color:${q.color};border:1px solid ${q.color}30;padding:2px 8px;border-radius:4px;font-size:9px;letter-spacing:0.1em">${q.category}</span>
+          <span style="font-family:'Instrument Serif',serif;font-size:13px;color:#E2E8F0">${escHtml(q.question)}</span>
+          <span class="match-badge" style="background:${isMatch ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'};color:${isMatch ? '#10B981' : '#F87171'};border:1px solid ${isMatch ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}">
+            ${isMatch ? '✓ ZGODNOŚĆ' : '⚡ ROZBIEŻNOŚĆ'}
+          </span>
+        </div>
+        <div class="compare-cols">
+          <div class="compare-col">
+            <div class="col-name" style="color:#60A5FA">${escHtml(nameA).toUpperCase()}</div>
+            <div class="compare-opts">${renderOpts(selA, '#3B82F6')}</div>
+          </div>
+          <div class="compare-col">
+            <div class="col-name" style="color:#A78BFA">${escHtml(nameB).toUpperCase()}</div>
+            <div class="compare-opts">${renderOpts(selB, '#8B5CF6')}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function restartAsPartner() {
+  answers = {};
+  currentQ = 0;
+  userName = '';
+  showScreen('start-screen');
+  document.getElementById('name-input').value = '';
+  document.getElementById('start-btn').disabled = true;
+}
+
+function restart() {
+  partnerData = null;
+  answers = {};
+  currentQ = 0;
+  userName = '';
+  showScreen('start-screen');
+  document.getElementById('name-input').value = '';
+  document.getElementById('start-btn').disabled = true;
+  document.querySelector('.start-sub').innerHTML =
+    '10 pytań o funkcjonalności platformy.<br>Wypełnij, skopiuj link z wynikami, wyślij wspólnikowi.<br>Porównajcie odpowiedzi — rozbieżności = priorytety.';
+  history.replaceState(null, '', window.location.pathname);
+}
+</script>
+</body>
+</html>
