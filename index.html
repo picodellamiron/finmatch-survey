@@ -646,7 +646,8 @@ function showResults() {
 
 function copyLink() {
   const url = document.getElementById('share-url-display').dataset.url;
-  navigator.clipboard.writeText(url).then(() => {
+
+  function onCopied() {
     const btn = document.getElementById('copy-btn');
     btn.textContent = 'SKOPIOWANO ✓';
     btn.style.background = 'rgba(16,185,129,0.2)';
@@ -658,7 +659,22 @@ function copyLink() {
       btn.style.borderColor = '';
       btn.style.color = '';
     }, 2000);
-  });
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(onCopied);
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = url;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    onCopied();
+  }
 }
 
 // --- COMPARE ---
@@ -753,6 +769,7 @@ function restartAsPartner() {
   showScreen('start-screen');
   document.getElementById('name-input').value = '';
   document.getElementById('start-btn').disabled = true;
+  history.replaceState(null, '', window.location.pathname);
 }
 
 function restart() {
